@@ -12,12 +12,9 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface IPreHandler extends IPageHandler {
 
-    String CHECK_HANDLER = "check";                         // 检查是网站是否满足下载条件
     String INIT_HANDLER = "init";                           // 初始化网站，用于确保网站模板下载后的正常显示
     String DOWNLOAD_HANDLER = "download";                   // 下载资源
-    String DE_LINK_HANDLER = "delink";                      // 将跳转都变得不可用
     String TRANSLATE_HANDLER = "translate";                 // 翻译文本
-    String JS_HANDLER = "gen-js";                   // 动态添加JS
     String DELETE_HANDLER = "delete";                       // 删除节点
 
     CompletableFuture<Document> hand(PageInfo info, Document doc);

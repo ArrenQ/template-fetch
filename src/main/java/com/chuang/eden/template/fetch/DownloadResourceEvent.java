@@ -1,6 +1,5 @@
 package com.chuang.eden.template.fetch;
 
-import com.chuang.eden.support.enums.TaskStatus;
 import org.springframework.context.ApplicationEvent;
 
 public class DownloadResourceEvent extends ApplicationEvent {
