@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Component
@@ -22,7 +23,7 @@ public class DeleteEleHandler implements IPreHandler {
     }
 
     @Override
-    public CompletableFuture<Document> hand(PageInfo info, Document doc) {
+    public CompletableFuture<Document> hand(PageInfo info, Document doc, Map<String, Object> context) {
 
         List<String> list = finder.getSelectorQuery(info, name());
 

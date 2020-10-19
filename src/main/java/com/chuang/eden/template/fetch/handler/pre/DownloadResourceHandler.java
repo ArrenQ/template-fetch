@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -40,7 +41,7 @@ public class DownloadResourceHandler implements IPreHandler {
     }
 
     @Override
-    public CompletableFuture<Document> hand(PageInfo info, Document doc) {
+    public CompletableFuture<Document> hand(PageInfo info, Document doc, Map<String, Object> context) {
         try {
             String pageHost = getHostByPage(info.getPageUrl());
             // 下载并修改js

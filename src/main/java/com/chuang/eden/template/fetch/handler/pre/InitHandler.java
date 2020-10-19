@@ -6,6 +6,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Component
@@ -16,7 +17,7 @@ public class InitHandler implements IPreHandler {
     }
 
     @Override
-    public CompletableFuture<Document> hand(PageInfo info, Document doc) {
+    public CompletableFuture<Document> hand(PageInfo info, Document doc, Map<String, Object> context) {
         // 删除base标签
         doc.select("base").remove();
 

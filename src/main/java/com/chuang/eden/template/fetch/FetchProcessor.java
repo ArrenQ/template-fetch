@@ -14,6 +14,7 @@ import org.springframework.context.ApplicationContext;
 import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,9 +31,6 @@ public class FetchProcessor {
 
     private final EmptyHandler DEFAULT_HANDLER = new EmptyHandler();
 
-    public boolean thymeleaf() {
-        return true;
-    }
 
     public boolean exists(PageInfo info) {
         String savedFile = fetchProperties.getSavePath() + "/" + websiteMapping.mapping(info.getWebsite()) + "/" + info.getPageTag() + "." + fetchProperties.getSuffix();
@@ -44,11 +42,12 @@ public class FetchProcessor {
      * 抓取页面，如果页面已经被抓取过，则直接返回。
      * @return 保存的路径
      */
-    public CompletableFuture<String> fetch(String userAgent, PageInfo info) {
+    public CompletableFuture<FetchResult> fetch(String userAgent, PageInfo info) {
         String savedFile = tempSavedPath(info.getWebsite(), info.getPageTag());
+        Map<String,Object> context = new HashMap<>();
         if(exists(info)) {
             log.info(info.getWebsite() + "已经处理过，不再处理");
-            return CompletableFuture.completedFuture(savedFile);
+            return CompletableFuture.completedFuture(new FetchResult(info, savedFile, context));
         }
 
         String[] chain = fetchProperties.getPrePageChain().get(info.getPageTag()).split(",");
@@ -63,25 +62,19 @@ public class FetchProcessor {
                     .asyncExecuteAsString();
         }
 
-        if(thymeleaf()) {
-            htmlOpt = htmlOpt.thenApply(this::handThymeleaf);
-        }
         // 解析为 Document
         CompletableFuture<Document> docFuture = htmlOpt.thenApply(Jsoup::parse);
 
         // 处理所有前置流程
+
         for(String handName: chain) {
             IPreHandler handler = getHandlerByName(handName);
             docFuture = docFuture.thenCompose(document -> handler.hand(
                     info,
-                    document)
+                    document,
+                    context)
             );
         }
-        // 处理完成时回调
-        docFuture.thenApply(document -> {
-            whenHandOver(document);
-            return document;
-        });
 
         return docFuture.thenApply(document -> {
             try {
@@ -97,7 +90,7 @@ public class FetchProcessor {
                 log.error("保存doc失败", e);
                 throw new SystemWarnException(-1, "保存doc失败", e);
             }
-            return savedFile;
+            return new FetchResult(info, savedFile, context);
         });
     }
 
@@ -105,9 +98,10 @@ public class FetchProcessor {
         Document document = getTemplate(website, pageTag);
 
         String[] chain = fetchProperties.getPostPageChain().get(pageTag).split(",");
+        Map<String, Object> context = new HashMap<>();
         for(String handName: chain) {
             IPostHandler handler = getHandlerByName(handName);
-            handler.hand(serverName, website, document);
+            handler.hand(serverName, website, document, context);
         }
         return document;
     }
@@ -152,16 +146,6 @@ public class FetchProcessor {
         } catch (IOException e) {
             throw new SystemWarnException(-1, website + ":" + pageTag + "文件无法获取, path为：" + path, e);
         }
-    }
-
-
-
-
-    public void whenHandOver(Document doc) {}
-
-    private String handThymeleaf(String s) {
-        return s.replaceAll("\\[\\[", "[ [")
-                .replaceAll("]]", "] ]");
     }
 
     @SuppressWarnings("unchecked")

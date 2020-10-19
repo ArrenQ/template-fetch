@@ -37,7 +37,7 @@ public class TranslateHandler implements IPreHandler {
     }
 
     @Override
-    public CompletableFuture<Document> hand(PageInfo info, Document doc) {
+    public CompletableFuture<Document> hand(PageInfo info, Document doc, Map<String, Object> context) {
 
         // 判断是否为中文站，中文站不翻译。
         CompletableFuture<Document> ignore = CompletableFuture.completedFuture(doc);

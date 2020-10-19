@@ -5,6 +5,7 @@ import com.chuang.urras.toolskit.basic.StringKit;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -17,7 +18,7 @@ public interface IPreHandler extends IPageHandler {
     String TRANSLATE_HANDLER = "translate";                 // 翻译文本
     String DELETE_HANDLER = "delete";                       // 删除节点
 
-    CompletableFuture<Document> hand(PageInfo info, Document doc);
+    CompletableFuture<Document> hand(PageInfo info, Document doc, Map<String, Object> context);
 
     default void tagArticleATag(Element aTag, String tagAttrKey, int txtMinSize) {
         if(aTag.hasAttr("gohome")) {

@@ -1,14 +1,9 @@
 package com.chuang.eden.template.fetch;
 
 import com.chuang.eden.template.fetch.handler.IPageHandler;
-import com.chuang.eden.template.fetch.handler.IPostHandler;
-import com.chuang.urras.support.exception.SystemWarnException;
-import com.chuang.urras.toolskit.basic.FileKit;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
-import org.springframework.lang.Nullable;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.function.BiConsumer;
 
@@ -17,11 +12,11 @@ public class AutoFetchProcessor extends FetchProcessor {
 
     public static final String PAGE_TAG = "auto";
 
-    public void fetch(String userAgent, List<String> urls, BiConsumer<String, Throwable> whenDone) {
+    public void fetch(String userAgent, List<String> urls, BiConsumer<FetchResult, Throwable> whenDone) {
         urls.forEach(s -> this.fetch(userAgent, s, whenDone));
     }
 
-    public boolean fetch(String userAgent, String url, BiConsumer<String, Throwable> whenDone) {
+    public boolean fetch(String userAgent, String url, BiConsumer<FetchResult, Throwable> whenDone) {
 
         try {
             String website = IPageHandler.getWebsite(url);
@@ -30,8 +25,7 @@ public class AutoFetchProcessor extends FetchProcessor {
                 log.info(info.getWebsite() + "已经处理过，不再处理");
                 return false;
             }
-            super.fetch(userAgent, info)
-                    .whenComplete((s1, throwable) -> whenDone.accept(website, throwable));
+            super.fetch(userAgent, info).whenComplete(whenDone);
         } catch (Exception e) {
             log.error("尝试抓取失败, url:{}", url, e);
             return false;
@@ -64,11 +58,6 @@ public class AutoFetchProcessor extends FetchProcessor {
 
     public String pageMappingPath(String website, String serverName, String random) {
         return super.pageMappingPath(website, PAGE_TAG, serverName, random);
-    }
-
-    @Override
-    public boolean thymeleaf() {
-        return false;
     }
 
 }
