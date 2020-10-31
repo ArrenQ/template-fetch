@@ -18,4 +18,16 @@ public class FetchResult {
         this.docFilePath = docFilePath;
         this.context = context;
     }
+
+    public String getHandTimeStr() {
+        StringBuilder builder = new StringBuilder();
+        if(null != context) {
+            context.keySet().stream().filter(s -> s.startsWith("hand-time-")).forEach(s -> {
+                String name = s.replace("hand-time-", "");
+                builder.append(name).append("->").append(context.get(s)).append("\r\n");
+            });
+        }
+
+        return builder.toString();
+    }
 }

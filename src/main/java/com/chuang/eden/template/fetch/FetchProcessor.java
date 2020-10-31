@@ -15,9 +15,11 @@ import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 
 @Slf4j
@@ -44,7 +46,7 @@ public class FetchProcessor {
      */
     public CompletableFuture<FetchResult> fetch(String userAgent, PageInfo info) {
         String savedFile = tempSavedPath(info.getWebsite(), info.getPageTag());
-        Map<String,Object> context = new HashMap<>();
+        final Map<String,Object> context = new LinkedHashMap<>();
         if(exists(info)) {
             log.info(info.getWebsite() + "已经处理过，不再处理");
             return CompletableFuture.completedFuture(new FetchResult(info, savedFile, context));
@@ -52,28 +54,39 @@ public class FetchProcessor {
 
         String[] chain = fetchProperties.getPrePageChain().get(info.getPageTag()).split(",");
         // 抓取网站
+
+        AtomicLong begin = new AtomicLong(System.currentTimeMillis());
+
         CompletableFuture<String> htmlOpt;
         if(StringKit.isNotEmpty(info.getHtml())) {
             htmlOpt = CompletableFuture.completedFuture(info.getHtml());
+            context.put("hand-time-download", "0");
         } else {
+
             htmlOpt = Request.Get(info.getPageUrl())
                     .header("user-agent", userAgent)
                     .build()
-                    .asyncExecuteAsString();
+                    .asyncExecuteAsString()
+                    .thenApply(s -> {
+                        long now = System.currentTimeMillis();
+                        setUsedTime("hand-time-download", context, begin);
+                        return s;
+                    });
         }
 
         // 解析为 Document
         CompletableFuture<Document> docFuture = htmlOpt.thenApply(Jsoup::parse);
+        setUsedTime("hand-time-parseDoc", context, begin);
 
         // 处理所有前置流程
 
         for(String handName: chain) {
             IPreHandler handler = getHandlerByName(handName);
-            docFuture = docFuture.thenCompose(document -> handler.hand(
-                    info,
-                    document,
-                    context)
-            );
+            docFuture = docFuture.thenCompose(document -> {
+                setUsedTime("hand-time-" + handName, context, begin);
+                return handler.hand(info, document, context);
+            });
+
         }
 
         return docFuture.thenApply(document -> {
@@ -83,9 +96,12 @@ public class FetchProcessor {
                     IPreHandler handler = getHandlerByName(handName);
                     if(handler instanceof ISaveBeforeHandler) {
                         doc = ((ISaveBeforeHandler)handler).hand(doc);
+                        setUsedTime("hand-time-save-before-" + handName, context, begin);
                     }
+
                 }
                 FileKit.writeString(doc, savedFile, "utf-8");
+                setUsedTime("hand-time-save-file", context, begin);
             } catch (IOException e) {
                 log.error("保存doc失败", e);
                 throw new SystemWarnException(-1, "保存doc失败", e);
@@ -164,5 +180,11 @@ public class FetchProcessor {
             handlers.forEach((s, handler) -> handlerMap.put(handler.name(), handler));
         }
         return this.handlerMap;
+    }
+
+    private void setUsedTime(String key, Map<String, Object> context, AtomicLong begin) {
+        long now = System.currentTimeMillis();
+        context.put(key, (now - begin.get()) + "");
+        begin.set(now);
     }
 }
