@@ -66,12 +66,17 @@ public class DownloadResourceHandler implements IPreHandler {
         }
 
         applicationContext.publishEvent(new DownloadResourceEvent(this, website, page, absPath, rePath, TaskStatus.CREATED));
-
-        CompletableFuture<Response> future = FutureKit.retryWhenError(
-                () -> Request.Get(absPath).build().asyncExecute(),
-                properties.getDownloadRetry(),
-                properties.getRetryDelaySeconds(),
-                TimeUnit.SECONDS);
+        CompletableFuture<Response> future;
+        try {
+             future = FutureKit.retryWhenError(
+                    () -> Request.Get(absPath).build().asyncExecute(),
+                    properties.getDownloadRetry(),
+                    properties.getRetryDelaySeconds(),
+                    TimeUnit.SECONDS);
+        } catch (Exception e) {
+            applicationContext.publishEvent(new DownloadResourceEvent(this, website, page, absPath, rePath, TaskStatus.ERROR, "request 构建失败"));
+            return;
+        }
 
         future.whenComplete((response, throwable) -> {
             if (null != throwable) {
