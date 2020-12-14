@@ -100,7 +100,6 @@ public class DownloadResourceHandler implements IPreHandler {
             }
 
             response.close();
-
         });
 
     }
