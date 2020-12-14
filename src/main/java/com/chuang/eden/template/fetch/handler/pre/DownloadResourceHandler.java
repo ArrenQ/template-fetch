@@ -80,6 +80,9 @@ public class DownloadResourceHandler implements IPreHandler {
 
         future.whenComplete((response, throwable) -> {
             if (null != throwable) {
+                if(response != null) {
+                    response.close();
+                }
                 log.error("下载失败", throwable);
                 applicationContext.publishEvent(new DownloadResourceEvent(this, website, page, absPath, rePath, TaskStatus.ERROR, "下载失败：" + throwable.getMessage()));
                 return;
@@ -90,13 +93,13 @@ public class DownloadResourceHandler implements IPreHandler {
                     applicationContext.publishEvent(new DownloadResourceEvent(this, website, page, absPath, rePath, TaskStatus.ENDED));
                 } catch (IOException e) {
                     applicationContext.publishEvent(new DownloadResourceEvent(this, website, page, absPath, rePath, TaskStatus.ERROR, "文件写入失败：" + e.getMessage()));
-                } finally {
-                    response.close();
                 }
             } else {
                 log.error("下载失败, 地址：{}，code:{}", absPath, response.getStatusCode());
                 applicationContext.publishEvent(new DownloadResourceEvent(this, website, page, absPath, rePath, TaskStatus.ERROR, "下载失败：code:" + response.getStatusCode()));
             }
+
+            response.close();
 
         });
 
