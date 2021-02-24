@@ -1,9 +1,6 @@
 package com.chuang.eden.template.fetch.handler.pre;
 
-import com.chuang.eden.template.fetch.DownloadResourceEvent;
-import com.chuang.eden.template.fetch.PageInfo;
-import com.chuang.eden.template.fetch.TaskStatus;
-import com.chuang.eden.template.fetch.WebsiteMapping;
+import com.chuang.eden.template.fetch.*;
 import com.chuang.eden.template.fetch.handler.IPreHandler;
 import com.chuang.eden.template.fetch.properties.FetchProperties;
 import com.chuang.urras.support.exception.SystemWarnException;
@@ -65,7 +62,7 @@ public class DownloadResourceHandler implements IPreHandler {
             return;
         }
 
-        applicationContext.publishEvent(new DownloadResourceEvent(this, website, page, absPath, rePath, TaskStatus.CREATED));
+        applicationContext.publishEvent(DownloadResourceEvent.create(this, website, page, absPath, rePath));
         CompletableFuture<Response> future;
         try {
              future = FutureKit.retryWhenError(
@@ -74,7 +71,7 @@ public class DownloadResourceHandler implements IPreHandler {
                     properties.getRetryDelaySeconds(),
                     TimeUnit.SECONDS);
         } catch (Exception e) {
-            applicationContext.publishEvent(new DownloadResourceEvent(this, website, page, absPath, rePath, TaskStatus.ERROR, "request 构建失败"));
+            applicationContext.publishEvent(DownloadResourceEvent.fail(this, website, page, absPath, rePath, FetchErrorType.CONNECT, "request 构建失败"));
             return;
         }
 
@@ -84,19 +81,19 @@ public class DownloadResourceHandler implements IPreHandler {
                     response.close();
                 }
                 log.error("下载失败", throwable);
-                applicationContext.publishEvent(new DownloadResourceEvent(this, website, page, absPath, rePath, TaskStatus.ERROR, "下载失败：" + throwable.getMessage()));
+                applicationContext.publishEvent(DownloadResourceEvent.fail(this, website, page, absPath, rePath, FetchErrorType.CONNECT, "下载失败：" + throwable.getMessage()));
                 return;
             }
             if(response.getStatusCode() == 200) {
                 try {
                     FileKit.writeFromStream(response.asStream(), properties.getSavePath() + rePath);
-                    applicationContext.publishEvent(new DownloadResourceEvent(this, website, page, absPath, rePath, TaskStatus.ENDED));
+                    applicationContext.publishEvent(DownloadResourceEvent.success(this, website, page, absPath, rePath));
                 } catch (IOException e) {
-                    applicationContext.publishEvent(new DownloadResourceEvent(this, website, page, absPath, rePath, TaskStatus.ERROR, "文件写入失败：" + e.getMessage()));
+                    applicationContext.publishEvent(DownloadResourceEvent.fail(this, website, page, absPath, rePath, FetchErrorType.WRITE_FILE, "文件写入失败：" + e.getMessage()));
                 }
             } else {
                 log.error("下载失败, 地址：{}，code:{}", absPath, response.getStatusCode());
-                applicationContext.publishEvent(new DownloadResourceEvent(this, website, page, absPath, rePath, TaskStatus.ERROR, "下载失败：code:" + response.getStatusCode()));
+                applicationContext.publishEvent(DownloadResourceEvent.fail(this, website, page, absPath, rePath, FetchErrorType.HTTP_CODE, "下载失败：code:" + response.getStatusCode()));
             }
 
             response.close();
