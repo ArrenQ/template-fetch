@@ -87,6 +87,7 @@ public class DownloadResourceHandler implements IPreHandler {
             if(response.getStatusCode() == 200) {
                 try {
                     FileKit.writeFromStream(response.asStream(), properties.getSavePath() + rePath);
+                    log.info("write {} to {}", absPath, properties.getSavePath() + rePath);
                     applicationContext.publishEvent(DownloadResourceEvent.success(this, website, page, absPath, rePath));
                 } catch (IOException e) {
                     applicationContext.publishEvent(DownloadResourceEvent.fail(this, website, page, absPath, rePath, FetchErrorType.WRITE_FILE, "文件写入失败：" + e.getMessage()));
