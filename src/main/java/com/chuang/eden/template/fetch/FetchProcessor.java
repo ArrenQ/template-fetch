@@ -2,10 +2,10 @@ package com.chuang.eden.template.fetch;
 
 import com.chuang.eden.template.fetch.handler.*;
 import com.chuang.eden.template.fetch.properties.FetchProperties;
-import com.chuang.urras.support.exception.SystemWarnException;
-import com.chuang.urras.toolskit.basic.FileKit;
-import com.chuang.urras.toolskit.basic.StringKit;
-import com.chuang.urras.toolskit.third.apache.httpcomponents.Request;
+import com.chuang.tauceti.httpclient.Request;
+import com.chuang.tauceti.support.exception.BusinessException;
+import com.chuang.tauceti.tools.basic.FileKit;
+import com.chuang.tauceti.tools.basic.StringKit;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -68,7 +68,6 @@ public class FetchProcessor {
                     .build()
                     .asyncExecuteAsString()
                     .thenApply(s -> {
-                        long now = System.currentTimeMillis();
                         setUsedTime("hand-time-download", context, begin);
                         return s;
                     });
@@ -104,7 +103,7 @@ public class FetchProcessor {
                 setUsedTime("hand-time-save-file", context, begin);
             } catch (IOException e) {
                 log.error("保存doc失败", e);
-                throw new SystemWarnException(-1, "保存doc失败", e);
+                throw new BusinessException(-1, "保存doc失败", e);
             }
             return new FetchResult(info, savedFile, context);
         });
@@ -132,7 +131,7 @@ public class FetchProcessor {
             FileKit.writeString(document.toString(), saveFile, "utf-8");
         } catch (IOException e) {
             log.error("保存doc失败", e);
-            throw new SystemWarnException(-1, "保存doc失败", e);
+            throw new BusinessException(-1, "保存doc失败", e);
         }
     }
 
@@ -160,7 +159,7 @@ public class FetchProcessor {
         try {
             return Jsoup.parse(FileKit.readString(path));
         } catch (IOException e) {
-            throw new SystemWarnException(-1, website + ":" + pageTag + "文件无法获取, path为：" + path, e);
+            throw new BusinessException(-1, website + ":" + pageTag + "文件无法获取, path为：" + path, e);
         }
     }
 

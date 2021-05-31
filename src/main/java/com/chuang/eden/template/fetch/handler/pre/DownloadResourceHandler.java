@@ -3,12 +3,12 @@ package com.chuang.eden.template.fetch.handler.pre;
 import com.chuang.eden.template.fetch.*;
 import com.chuang.eden.template.fetch.handler.IPreHandler;
 import com.chuang.eden.template.fetch.properties.FetchProperties;
-import com.chuang.urras.support.exception.SystemWarnException;
-import com.chuang.urras.toolskit.basic.FileKit;
-import com.chuang.urras.toolskit.basic.FutureKit;
-import com.chuang.urras.toolskit.basic.RegexKit;
-import com.chuang.urras.toolskit.third.apache.httpcomponents.Request;
-import com.chuang.urras.toolskit.third.apache.httpcomponents.Response;
+import com.chuang.tauceti.httpclient.Request;
+import com.chuang.tauceti.httpclient.Response;
+import com.chuang.tauceti.support.exception.BusinessException;
+import com.chuang.tauceti.tools.basic.FileKit;
+import com.chuang.tauceti.tools.basic.FutureKit;
+import com.chuang.tauceti.tools.basic.RegexKit;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -93,7 +93,7 @@ public class DownloadResourceHandler implements IPreHandler {
                     applicationContext.publishEvent(DownloadResourceEvent.fail(this, website, page, absPath, rePath, FetchErrorType.WRITE_FILE, "文件写入失败：" + e.getMessage()));
                 }
             } else {
-                log.error("下载失败, 地址：{}，code:{}", absPath, response.getStatusCode());
+                log.error("下载失败, 地址: {}, code:{}", absPath, response.getStatusCode());
                 applicationContext.publishEvent(DownloadResourceEvent.fail(this, website, page, absPath, rePath, FetchErrorType.HTTP_CODE, "下载失败：code:" + response.getStatusCode()));
             }
 
@@ -169,7 +169,7 @@ public class DownloadResourceHandler implements IPreHandler {
             URL u = new URL(page);
             return u.getProtocol() + "://" + u.getHost();
         } catch (MalformedURLException e) {
-            throw new SystemWarnException(-1, "page host error:" + page);
+            throw new BusinessException(-1, "page host error:" + page);
         }
     }
 }

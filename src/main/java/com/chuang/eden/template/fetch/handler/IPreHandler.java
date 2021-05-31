@@ -1,7 +1,7 @@
 package com.chuang.eden.template.fetch.handler;
 
 import com.chuang.eden.template.fetch.PageInfo;
-import com.chuang.urras.toolskit.basic.StringKit;
+import com.chuang.tauceti.tools.basic.StringKit;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 

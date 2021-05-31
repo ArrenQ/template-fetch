@@ -1,6 +1,6 @@
 package com.chuang.eden.template.fetch.handler;
 
-import com.chuang.urras.support.exception.SystemWarnException;
+import com.chuang.tauceti.support.exception.BusinessException;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
@@ -17,7 +17,7 @@ public interface IPageHandler {
     String name();
 
     default Element getBody(String website, Document doc) {
-        return doc.select("body").stream().filter(element -> element.childrenSize() > 0).findFirst().orElseThrow(() -> new SystemWarnException(-1, website + "无法找到body, doc 为：" + doc.toString()));
+        return doc.select("body").stream().filter(element -> element.childrenSize() > 0).findFirst().orElseThrow(() -> new BusinessException(-1, website + "无法找到body, doc 为：" + doc.toString()));
     }
 
     static String getWebsite(String url) {
@@ -29,7 +29,7 @@ public interface IPageHandler {
                 u = new URL("http://" + url);
             }
         } catch (MalformedURLException e) {
-            throw new SystemWarnException(-1, "website 域名解析异常", e);
+            throw new BusinessException(-1, "website 域名解析异常", e);
         }
 
         String[] domains = u.getHost().split("\\.");
