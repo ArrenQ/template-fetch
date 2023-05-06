@@ -2,7 +2,7 @@ package com.chuang.eden.template.fetch;
 
 import com.chuang.eden.template.fetch.handler.*;
 import com.chuang.eden.template.fetch.properties.FetchProperties;
-import com.chuang.tauceti.httpclient.Request;
+import com.chuang.tauceti.httpclient2.Request;
 import com.chuang.tauceti.support.exception.BusinessException;
 import com.chuang.tauceti.tools.basic.FileKit;
 import com.chuang.tauceti.tools.basic.StringKit;
@@ -64,9 +64,8 @@ public class FetchProcessor {
         } else {
 
             htmlOpt = Request.Get(info.getPageUrl())
-                    .header("user-agent", userAgent)
-                    .build()
-                    .asyncExecuteAsString()
+                    .addHeader("user-agent", userAgent)
+                    .executeAsString()
                     .thenApply(s -> {
                         setUsedTime("hand-time-download", context, begin);
                         return s;

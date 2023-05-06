@@ -1,11 +1,12 @@
 package com.chuang.eden.template.fetch.handler.pre;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import com.chuang.eden.template.fetch.PageInfo;
 import com.chuang.eden.template.fetch.handler.IPreHandler;
 import com.chuang.eden.template.fetch.properties.FetchProperties;
-import com.chuang.tauceti.httpclient.Request;
+import com.chuang.tauceti.httpclient2.Param;
+import com.chuang.tauceti.httpclient2.Request;
 import com.chuang.tauceti.tools.basic.FutureKit;
 import com.chuang.tauceti.tools.basic.StringKit;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -65,7 +66,7 @@ public class TranslateHandler implements IPreHandler {
         }
         int n;
         for(int i = 0; i < text.length(); i++) {
-            n = (int)text.charAt(i);
+            n = text.charAt(i);
             if(!(19968 <= n && n <40869)) {
                 return false;
             }
@@ -101,7 +102,7 @@ public class TranslateHandler implements IPreHandler {
     private CompletableFuture<Document> translateImgAlt(Document doc) {
         List<Element> imgs = doc.select("img").stream()
                 .filter(element -> StringKit.isNotEmpty(element.attr("alt").trim()))
-                .collect(Collectors.toList());
+                .toList();
 
         List<String> lines = imgs.stream()
                 .map(element -> element.attr("alt").replaceAll("\n", ""))
@@ -179,11 +180,9 @@ public class TranslateHandler implements IPreHandler {
         params.put("salt", salt);
         params.put("sign", sign);
 
-
         Supplier<CompletableFuture<String>> futureGetter = () -> Request.Post(fetchProperties.getYoudao().getApiUrl())
-                .parameter(params)
-                .build()
-                .asyncExecuteAsString();
+                .body(new Param().param(params).queryString())
+                .executeAsString();
         return FutureKit.retryWhenError(futureGetter,
                 fetchProperties.getYoudao().getRetryTimes(),
                 fetchProperties.getYoudao().getRetryDelay(),

@@ -3,8 +3,8 @@ package com.chuang.eden.template.fetch.handler.pre;
 import com.chuang.eden.template.fetch.*;
 import com.chuang.eden.template.fetch.handler.IPreHandler;
 import com.chuang.eden.template.fetch.properties.FetchProperties;
-import com.chuang.tauceti.httpclient.Request;
-import com.chuang.tauceti.httpclient.Response;
+import com.chuang.tauceti.httpclient2.Request;
+import com.chuang.tauceti.httpclient2.Response;
 import com.chuang.tauceti.support.exception.BusinessException;
 import com.chuang.tauceti.tools.basic.FileKit;
 import com.chuang.tauceti.tools.basic.FutureKit;
@@ -66,7 +66,7 @@ public class DownloadResourceHandler implements IPreHandler {
         CompletableFuture<Response> future;
         try {
              future = FutureKit.retryWhenError(
-                    () -> Request.Get(absPath).build().asyncExecute(),
+                    () -> Request.Get(absPath).execute(),
                     properties.getDownloadRetry(),
                     properties.getRetryDelaySeconds(),
                     TimeUnit.SECONDS);
